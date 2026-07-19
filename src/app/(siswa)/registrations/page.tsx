@@ -1,11 +1,15 @@
 "use client";
 
 import { useRegistrations } from "./_hooks/use-registrations";
+import { useCompetitions } from "../competitions/_hooks/use-competitions";
 import { RegistrationList } from "./_components/registration-list";
 import { ClipboardCheck } from "lucide-react";
 
 export default function RegistrationsPage() {
-  const { registrations, isLoading, refetch } = useRegistrations();
+  const { registrations, isLoading: isRegLoading, refetch } = useRegistrations();
+  const { competitions, isLoading: isCompLoading } = useCompetitions();
+
+  const isLoading = isRegLoading || isCompLoading;
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,7 +30,7 @@ export default function RegistrationsPage() {
         </div>
       </div>
 
-      <RegistrationList registrations={registrations} isLoading={isLoading} onMutate={refetch} />
+      <RegistrationList registrations={registrations} competitions={competitions} isLoading={isLoading} onMutate={refetch} />
     </div>
   );
 }

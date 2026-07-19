@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { registrationService } from "@/src/services";
 import { useProfileContext } from "@/src/contexts/user-context";
 import type { Registration } from "@/src/types/registration.types";
+import type { Competition } from "@/src/types/competition.types";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import {
@@ -22,10 +23,12 @@ import { FilePreviewDialog } from "@/src/components/ui/file-preview-dialog";
 
 export function RegistrationList({
   registrations,
+  competitions = [],
   isLoading,
   onMutate,
 }: {
   registrations: Registration[];
+  competitions?: Competition[];
   isLoading: boolean;
   onMutate: () => void;
 }) {
@@ -133,6 +136,21 @@ export function RegistrationList({
                          <p className="font-semibold text-blue-900 text-sm">Informasi Pembayaran</p>
                          <p className="text-blue-800/80 text-xs mt-1">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
                          
+                         {(() => {
+                           const comp = competitions.find(c => c.id === reg.competitionId);
+                           const wave = comp?.waves?.find(w => w.name === reg.waveName);
+                           const price = wave ? wave.price : comp?.activeWave?.price;
+                           
+                           return price ? (
+                             <div className="mt-3 p-3 bg-blue-100/50 rounded-lg border border-blue-200 flex items-center justify-between">
+                               <p className="text-sm font-semibold text-blue-900">Total Tagihan:</p>
+                               <p className="font-bold text-lg text-[#5C7C99]">
+                                 {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)}
+                               </p>
+                             </div>
+                           ) : null;
+                         })()}
+
                          <div className="mt-3 p-3 bg-white rounded-lg border border-blue-100 flex items-center justify-between">
                            <div>
                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bank BRI</p>
