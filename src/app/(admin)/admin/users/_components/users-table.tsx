@@ -11,6 +11,13 @@ import {
   CardTitle,
   CardDescription,
 } from "@/src/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/src/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { Badge } from "@/src/components/ui/badge"
@@ -31,6 +38,7 @@ import {
   ShieldCheckIcon,
   CrownIcon,
   WalletIcon,
+  EyeIcon,
 } from "lucide-react"
 
 const ROLE_OPTIONS = [
@@ -101,6 +109,9 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("ALL")
 
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -109,11 +120,6 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
     }, 400)
     return () => clearTimeout(timer)
   }, [search])
-
-  // Reset page on filter change
-  useEffect(() => {
-    setPage(1)
-  }, [roleFilter])
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
@@ -134,6 +140,7 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
 
   // Re-fetch when page/filter/search changes OR when parent signals a mutation (new user created)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchUsers()
   }, [fetchUsers, onMutate])
 
@@ -164,7 +171,10 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
                 className="h-8 pl-8 text-sm"
               />
             </div>
-            <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val ?? "ALL")}>
+            <Select value={roleFilter} onValueChange={(val) => {
+              setRoleFilter(val ?? "ALL")
+              setPage(1)
+            }}>
               <SelectTrigger id="users-role-filter" className="h-8 w-full sm:w-[160px] text-sm">
                 <SelectValue placeholder="Filter Role" />
               </SelectTrigger>
@@ -204,6 +214,7 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
                     <th className="px-5 py-3 text-left font-medium">Email</th>
                     <th className="px-5 py-3 text-left font-medium">Role</th>
                     <th className="px-5 py-3 text-left font-medium">Status</th>
+                    <th className="px-5 py-3 text-right font-medium">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted/20">
@@ -241,6 +252,19 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
                           {user.isActive ? "Aktif" : "Non-aktif"}
                         </Badge>
                       </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setIsModalOpen(true)
+                          }}
+                          className="size-8 text-muted-foreground hover:text-primary"
+                        >
+                          <EyeIcon className="size-4" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -268,12 +292,25 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
                     <RoleBadge role={user.role} />
-                    <Badge
-                      variant={user.isActive ? "default" : "secondary"}
-                      className={`text-[10px] px-1.5 py-0 h-4 ${user.isActive ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100" : ""}`}
-                    >
-                      {user.isActive ? "Aktif" : "Non-aktif"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={user.isActive ? "default" : "secondary"}
+                        className={`text-[10px] px-1.5 py-0 h-4 ${user.isActive ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100" : ""}`}
+                      >
+                        {user.isActive ? "Aktif" : "Non-aktif"}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setIsModalOpen(true)
+                        }}
+                        className="size-6 text-muted-foreground hover:text-primary"
+                      >
+                        <EyeIcon className="size-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -333,6 +370,76 @@ export function UsersTable({ onMutate }: { onMutate?: number }) {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detail Pengguna</DialogTitle>
+            <DialogDescription>
+              Informasi lengkap akun pengguna.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="flex flex-col gap-4 mt-2">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-16">
+                  <AvatarImage src={selectedUser.avatarUrl || ""} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                    {(selectedUser.fullName || selectedUser.email).charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-lg">{selectedUser.fullName || "—"}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">Role</span>
+                  <div><RoleBadge role={selectedUser.role} /></div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">Status</span>
+                  <div>
+                    <Badge
+                      variant={selectedUser.isActive ? "default" : "secondary"}
+                      className={`text-xs ${selectedUser.isActive ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100" : ""}`}
+                    >
+                      {selectedUser.isActive ? "Aktif" : "Non-aktif"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">Instansi / Sekolah</span>
+                  <span className="font-medium">{selectedUser.institution || "—"}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">NPSN</span>
+                  <span className="font-medium">{selectedUser.npsn || "—"}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">Nomor Telepon</span>
+                  <span className="font-medium">{selectedUser.phoneNumber || "—"}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">ID Pengguna</span>
+                  <span className="font-medium truncate" title={selectedUser.id}>{selectedUser.id}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">Dibuat Pada</span>
+                  <span className="font-medium">
+                    {new Date(selectedUser.createdAt).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
