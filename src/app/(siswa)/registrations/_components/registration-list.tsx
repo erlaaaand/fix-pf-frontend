@@ -16,7 +16,7 @@ import {
 import { Skeleton } from "@/src/components/ui/skeleton";
 import { Label } from "@/src/components/ui/label";
 import { Input } from "@/src/components/ui/input";
-import { MessageCircle, CheckCircle2, Download, FileText } from "lucide-react";
+import { MessageCircle, CheckCircle2, Download, FileText, CreditCard, Copy, Info } from "lucide-react";
 import { AxiosError } from "axios";
 import { FilePreviewDialog } from "@/src/components/ui/file-preview-dialog";
 
@@ -125,6 +125,37 @@ export function RegistrationList({
                 <p><strong>Gelombang:</strong> {reg.waveName}</p>
                 {reg.teamName ? <p><strong>Tim:</strong> {reg.teamName}</p> : <p><strong>Individu:</strong> {reg.participantName}</p>}
                 
+                {(reg.status === 'PENDING_PAYMENT' || reg.status === 'REJECTED') && (
+                  <div className="mt-4 p-4 bg-blue-50/50 border border-blue-200/60 rounded-xl space-y-3">
+                    <div className="flex items-start gap-3">
+                       <CreditCard className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                       <div className="flex-1">
+                         <p className="font-semibold text-blue-900 text-sm">Informasi Pembayaran</p>
+                         <p className="text-blue-800/80 text-xs mt-1">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
+                         
+                         <div className="mt-3 p-3 bg-white rounded-lg border border-blue-100 flex items-center justify-between">
+                           <div>
+                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bank BRI</p>
+                             <p className="font-mono text-lg font-bold text-slate-800">549801030408539</p>
+                             <p className="text-xs font-medium text-slate-600">a.n. Gusnida Zararah</p>
+                           </div>
+                           <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText("549801030408539"); toast.success("Nomor rekening disalin!"); }} className="text-blue-600 hover:bg-blue-50">
+                             <Copy className="w-4 h-4" />
+                           </Button>
+                         </div>
+
+                         <div className="mt-3 text-xs text-blue-800/90 bg-blue-100/50 p-2.5 rounded-md border border-blue-200/50 flex items-start gap-2">
+                           <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
+                           <div className="leading-relaxed">
+                             <strong>Penting:</strong> Wajib menambahkan berita/catatan transfer dengan format: <br/>
+                             <code className="bg-white px-1.5 py-0.5 rounded border border-blue-200 mt-1 inline-block font-mono text-[10px] select-all">PHYSICSFESTIVAL REG {reg.competitionName?.toUpperCase()} {reg.teamName ? reg.teamName.toUpperCase() : (reg.participantName || "Peserta").toUpperCase()}</code>
+                           </div>
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+                )}
+
                 {reg.paymentAttempts && reg.paymentAttempts.length > 0 && (
                   <div className="mt-4 pt-4 border-t">
                     <p className="font-semibold mb-2 text-xs uppercase tracking-wider text-muted-foreground">Riwayat Unggah Bukti</p>
